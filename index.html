@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Ratio Race - Game Perbandingan Matematika SMP</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#2563eb',
+                            red: '#dc2626',
+                            gold: '#f59e0b',
+                            dark: '#0b1120'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-short': 'bounce 0.8s infinite',
+                        'spin-slow': 'spin 10s linear infinite',
+                        'wiggle': 'wiggle 0.5s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #070a12;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card-interactive {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card-interactive:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 12px 30px -10px rgba(79, 70, 229, 0.25);
+        }
+
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(11, minmax(0, 1fr));
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative pb-10">
+
+    <!-- ================= FIXED WATERMARK: GAME DEPRY ================= -->
+    <div class="fixed bottom-3 right-4 z-50 pointer-events-none select-none">
+        <div class="flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-indigo-500/30 shadow-xl shadow-indigo-950/50">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+            <i class="fa-solid fa-gamepad text-indigo-400 text-xs"></i>
+            <span class="text-xs font-black tracking-wider uppercase bg-gradient-to-r from-indigo-300 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
+                Game Depry
+            </span>
+        </div>
+    </div>
+
+    <!-- ================= MAIN HEADER NAVIGATION ================= -->
+    <header class="w-full bg-slate-900/90 border-b border-slate-800/80 px-4 py-3 sticky top-0 z-40 backdrop-blur-md shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-400 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-600/30 transform hover:scale-105 transition">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-amber-300 bg-clip-text text-transparent">
+                        THE GREAT RATIO RACE
+                    </h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block font-medium">
+                        Lomba Perbandingan Senilai & Berbalik Nilai • Matematika SMP Kelas 7
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <!-- Audio Toggle Button -->
+                <button id="sound-toggle-btn" onclick="toggleAudio()" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold flex items-center space-x-2 transition shadow-sm">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
+                    <span id="sound-text" class="hidden md:inline">Suara: ON</span>
+                </button>
+
+                <!-- Help Rules Button -->
+                <button onclick="toggleRulesModal()" 
+                    class="px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span class="hidden md:inline">Petunjuk Game</span>
+                </button>
+
+                <!-- Reset Game Button -->
+                <button onclick="confirmResetGame()" 
+                    class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span class="hidden md:inline">Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        <!-- ================= SCREEN 1: GAME SETUP ================= -->
+        <section id="setup-screen" class="max-w-3xl mx-auto my-auto py-6">
+            <div class="glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="text-center mb-8">
+                    <span class="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
+                        <i class="fa-solid fa-sliders text-xs"></i>
+                        <span>Pengaturan Pertandingan</span>
+                    </span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Persiapan Balapan</h2>
+                    <p class="text-slate-400 text-xs md:text-sm mt-2 max-w-md mx-auto">
+                        Tentukan nama kelompok dan pilih kendaraan balap favorit untuk memulai kompetisi perbandingan!
+                    </p>
+                </div>
+
+                <form onsubmit="handleStartGame(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Team Alpha Config -->
+                        <div class="p-5 rounded-2xl bg-blue-950/40 border border-blue-500/30 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2 text-blue-400 font-bold text-sm">
+                                    <span class="w-3 h-3 rounded-full bg-blue-500 animate-ping"></span>
+                                    <span>Tim 1 (Jalur Biru)</span>
+                                </div>
+                                <span class="text-[10px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-500/30">Alpha</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-300 mb-1 font-semibold">Nama Kelompok</label>
+                                <input type="text" id="alpha-name-input" value="Kelompok Alpha" required
+                                    class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold text-sm transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-300 mb-2 font-semibold">Pilih Kendaraan Balap</label>
+                                <div class="grid grid-cols-3 gap-2" id="alpha-avatar-selector">
+                                    <!-- Dynamic avatars injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Beta Config -->
+                        <div class="p-5 rounded-2xl bg-red-950/40 border border-red-500/30 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2 text-red-400 font-bold text-sm">
+                                    <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+                                    <span>Tim 2 (Jalur Merah)</span>
+                                </div>
+                                <span class="text-[10px] bg-red-500/20 text-red-300 font-bold px-2 py-0.5 rounded-full border border-red-500/30">Beta</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-300 mb-1 font-semibold">Nama Kelompok</label>
+                                <input type="text" id="beta-name-input" value="Kelompok Beta" required
+                                    class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500 font-semibold text-sm transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-300 mb-2 font-semibold">Pilih Kendaraan Balap</label>
+                                <div class="grid grid-cols-3 gap-2" id="beta-avatar-selector">
+                                    <!-- Dynamic avatars injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rule Highlight Banner -->
+                    <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex items-center justify-between text-xs md:text-sm">
+                        <div class="flex items-center space-x-3 text-slate-300">
+                            <i class="fa-solid fa-trophy text-amber-400 text-lg"></i>
+                            <span><b>Target Kemenangan:</b> Tim pertama yang mencapai <b>Finish (Langkah 10)</b>.</span>
+                        </div>
+                        <span class="text-xs bg-slate-700 text-slate-300 font-bold px-2.5 py-1 rounded-lg hidden sm:inline">
+                            10 Stasiun
+                        </span>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-red-600 hover:from-blue-500 hover:to-red-500 text-white font-black text-lg shadow-xl shadow-indigo-600/30 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-3">
+                        <span>MULAI BALAPAN SEKARANG!</span>
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 2: MAIN GAME BOARD ================= -->
+        <section id="game-screen" class="hidden space-y-6">
+
+            <!-- Turn Banner & Timer Header -->
+            <div id="turn-banner" class="glass-card rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 border-l-8 border-blue-500 transition-all duration-300">
+                <div class="flex items-center space-x-4">
+                    <div id="current-team-icon-bg" class="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-3xl shadow-inner">
+                        <span id="current-team-icon">🏎️</span>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold tracking-widest text-slate-400" id="turn-subtitle">GILIRAN BERMAIN</div>
+                        <h2 id="current-team-name" class="text-2xl font-black text-blue-400 tracking-tight">Kelompok Alpha</h2>
+                    </div>
+                </div>
+
+                <!-- Discussion Timer Control Widget -->
+                <div class="flex items-center bg-slate-900/90 px-4 py-2.5 rounded-2xl border border-slate-800 space-x-4 shadow-inner">
+                    <div class="text-center">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Waktu Diskusi</div>
+                        <div id="timer-display" class="text-2xl font-mono font-black text-amber-400">01:30</div>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button onclick="toggleTimer()" id="timer-toggle-btn" 
+                            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center justify-center transition border border-slate-700">
+                            <i id="timer-toggle-icon" class="fa-solid fa-pause"></i>
+                        </button>
+                        <button onclick="resetTimer()" 
+                            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center justify-center transition border border-slate-700">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Race Track Component -->
+            <div class="glass-card rounded-3xl p-4 md:p-6 shadow-2xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-extrabold text-slate-200 text-sm md:text-base flex items-center space-x-2">
+                        <i class="fa-solid fa-road text-indigo-400"></i>
+                        <span>Sirkuit Balapan (10 Langkah / Stasiun)</span>
+                    </h3>
+                    <div class="flex items-center space-x-4 text-xs font-semibold">
+                        <span class="flex items-center space-x-1.5 text-slate-400">
+                            <span class="text-amber-400">🎁</span>
+                            <span>Kotak Kejutan (Stasiun 4 & 8)</span>
+                        </span>
+                        <span class="flex items-center space-x-1.5 text-slate-400">
+                            <span class="text-emerald-400">🏁</span>
+                            <span>Finish (Stasiun 10)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Track Lanes Container -->
+                <div class="space-y-4 py-2">
+                    
+                    <!-- LANE 1: ALPHA -->
+                    <div class="bg-slate-900/90 rounded-2xl p-3 border border-blue-500/30 relative">
+                        <div class="flex justify-between items-center mb-2 px-1">
+                            <div id="alpha-lane-title" class="text-xs font-bold text-blue-400 flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                <span>Kelompok Alpha</span>
+                            </div>
+                            <span id="alpha-step-badge" class="text-xs bg-blue-500/20 text-blue-300 font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">
+                                Posisi: Langkah 0 (Start)
+                            </span>
+                        </div>
+
+                        <!-- Track Grid Cells 0 to 10 -->
+                        <div class="track-grid gap-1 md:gap-2" id="alpha-track-cells">
+                            <!-- Track cells rendered via JS -->
+                        </div>
+                    </div>
+
+                    <!-- LANE 2: BETA -->
+                    <div class="bg-slate-900/90 rounded-2xl p-3 border border-red-500/30 relative">
+                        <div class="flex justify-between items-center mb-2 px-1">
+                            <div id="beta-lane-title" class="text-xs font-bold text-red-400 flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                                <span>Kelompok Beta</span>
+                            </div>
+                            <span id="beta-step-badge" class="text-xs bg-red-500/20 text-red-300 font-bold px-2.5 py-0.5 rounded-full border border-red-500/30">
+                                Posisi: Langkah 0 (Start)
+                            </span>
+                        </div>
+
+                        <!-- Track Grid Cells 0 to 10 -->
+                        <div class="track-grid gap-1 md:gap-2" id="beta-track-cells">
+                            <!-- Track cells rendered via JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Action Panel: Choose Card Category -->
+            <div id="card-selection-panel" class="glass-card rounded-3xl p-6 shadow-2xl">
+                <div class="text-center mb-6">
+                    <h3 class="text-lg md:text-xl font-bold text-white">Pilih Kartu Tantangan Misi</h3>
+                    <p class="text-xs md:text-sm text-slate-400 mt-1">
+                        Pilih jenis perbandingan untuk mengambil kartu soal. Tingkat kesulitan memengaruhi jumlah langkah!
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    
+                    <!-- Direct Proportion Card Option -->
+                    <button onclick="selectCardCategory('senilai')" 
+                        class="glass-card-interactive group relative rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/80 p-6 border-2 border-blue-500/40 hover:border-blue-400 text-left flex flex-col justify-between overflow-hidden">
+                        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition"></div>
+                        
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full text-xs font-bold flex items-center space-x-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                    <span>Kartu Senilai</span>
+                                </span>
+                                <span class="text-xs text-blue-400 font-black tracking-wider bg-blue-950/90 px-2.5 py-1 rounded-lg border border-blue-800">
+                                    +1 LANGKAH
+                                </span>
+                            </div>
+                            <h4 class="text-lg font-bold text-white group-hover:text-blue-300 transition mb-2">Perbandingan Senilai</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                                Nilai variabel pertama bertambah, nilai variabel kedua **TURUT BERTAMBAH**. (Contoh: Bensin vs Jarak, Jumlah Barang vs Harga).
+                            </p>
+                        </div>
+
+                        <div class="flex items-center text-xs font-bold text-blue-400 group-hover:translate-x-1 transition duration-200">
+                            <span>Ambil Kartu Senilai</span>
+                            <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </div>
+                    </button>
+
+                    <!-- Inverse Proportion Card Option -->
+                    <button onclick="selectCardCategory('berbalik')" 
+                        class="glass-card-interactive group relative rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-red-950/80 p-6 border-2 border-red-500/40 hover:border-red-400 text-left flex flex-col justify-between overflow-hidden">
+                        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition"></div>
+                        
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/30 rounded-full text-xs font-bold flex items-center space-x-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                                    <span>Kartu Berbalik Nilai</span>
+                                </span>
+                                <span class="text-xs text-red-400 font-black tracking-wider bg-red-950/90 px-2.5 py-1 rounded-lg border border-red-800">
+                                    +2 LANGKAH
+                                </span>
+                            </div>
+                            <h4 class="text-lg font-bold text-white group-hover:text-red-300 transition mb-2">Perbandingan Berbalik Nilai</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                                Nilai variabel pertama bertambah, nilai variabel kedua **JUSTRUL BERKURANG**. Tingkat kesulitan lebih tinggi! (Contoh: Pekerja vs Waktu, Kecepatan vs Waktu).
+                            </p>
+                        </div>
+
+                        <div class="flex items-center text-xs font-bold text-red-400 group-hover:translate-x-1 transition duration-200">
+                            <span>Ambil Kartu Berbalik Nilai</span>
+                            <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </div>
+                    </button>
+
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ================= MODAL 1: QUESTION MODAL ================= -->
+    <div id="question-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 md:p-8 border border-slate-700 shadow-2xl relative animate-scale-up">
+            
+            <!-- Category Header -->
+            <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                <span id="modal-category-badge" class="px-3 py-1 rounded-full text-xs font-bold border">
+                    🔵 Kartu Senilai
+                </span>
+                <div class="text-xs font-semibold text-slate-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-hourglass-half text-amber-400"></i>
+                    <span id="modal-timer-badge">Waktu: 90s</span>
+                </div>
+            </div>
+
+            <!-- Question Text Box -->
+            <div class="mb-6">
+                <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-lines text-indigo-400"></i>
+                    <span>Soal Tantangan Misi:</span>
+                </div>
+                <p id="modal-question-text" class="text-base md:text-lg text-slate-100 font-semibold leading-relaxed bg-slate-900/90 p-5 rounded-2xl border border-slate-800 shadow-inner">
+                    <!-- Dynamic Question inserted via JS -->
+                </p>
+            </div>
+
+            <!-- Multiple Choice Options -->
+            <div id="modal-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <!-- Option Buttons injected via JS -->
+            </div>
+
+            <!-- Pass / Throw Question Button -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
+                <span class="text-slate-500">
+                    <i class="fa-solid fa-users text-indigo-400/80 mr-1"></i> Diskusikan bersama anggota tim.
+                </span>
+                <button onclick="handlePassQuestion()" 
+                    class="text-amber-400 hover:text-amber-300 font-bold flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 transition">
+                    <i class="fa-solid fa-share"></i>
+                    <span>Lempar Soal ke Lawan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 2: EXPLANATION MODAL ================= -->
+    <div id="explanation-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 md:p-8 border border-slate-700 shadow-2xl relative">
+            
+            <div id="explanation-status-banner" class="rounded-2xl p-4 mb-5 text-center flex items-center justify-center space-x-3">
+                <i id="explanation-status-icon" class="text-3xl"></i>
+                <div>
+                    <h3 id="explanation-status-title" class="text-xl font-black"></h3>
+                    <p id="explanation-status-subtitle" class="text-xs opacity-90"></p>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center space-x-2">
+                    <i class="fa-solid fa-square-root-variable text-indigo-400"></i>
+                    <span>Pembahasan & Formula Matematika Step-by-Step:</span>
+                </h4>
+                <div id="explanation-content" class="bg-slate-900/90 rounded-2xl p-5 text-xs md:text-sm text-slate-200 leading-relaxed border border-slate-800 space-y-2 shadow-inner">
+                    <!-- Explanation HTML inserted via JS -->
+                </div>
+            </div>
+
+            <button onclick="closeExplanationModal()" 
+                class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-xl transition flex items-center justify-center space-x-2">
+                <span>Lanjutkan Balapan</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 3: MYSTERY BOX MODAL ================= -->
+    <div id="mystery-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-md w-full rounded-3xl p-6 md:p-8 border border-amber-500/40 shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute -top-20 -left-20 w-44 h-44 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-widest mb-4">
+                <span>🎁 KOTAK KEJUTAN MISTERI</span>
+            </div>
+
+            <h3 class="text-2xl font-black text-white mb-2">Kejutan Di Lintasan!</h3>
+            <p class="text-xs text-slate-400 mb-6">Pion mendarat di Kotak Misteri Stasiun! Klik kotak di bawah untuk membuka takdir tim!</p>
+
+            <!-- Box Graphic / Animation -->
+            <div id="mystery-box-graphic" class="my-6 py-6 cursor-pointer transform hover:scale-110 transition duration-300 group" onclick="openMysteryBox()">
+                <div class="text-7xl group-hover:animate-bounce">🎁</div>
+                <p class="text-xs text-amber-400 font-bold mt-4 animate-pulse">Klik Untuk Membuka Kejutan!</p>
+            </div>
+
+            <!-- Result Display (Hidden initially) -->
+            <div id="mystery-result" class="hidden space-y-4 mb-6">
+                <div id="mystery-icon" class="text-6xl animate-bounce"></div>
+                <h4 id="mystery-title" class="text-xl font-black text-white"></h4>
+                <p id="mystery-desc" class="text-xs md:text-sm text-slate-300 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 leading-relaxed"></p>
+            </div>
+
+            <button id="mystery-continue-btn" onclick="closeMysteryModal()" 
+                class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition hidden shadow-lg">
+                <span>Klaim & Lanjutkan</span>
+                <i class="fa-solid fa-check ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 4: VICTORY & STATS MODAL ================= -->
+    <div id="victory-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-xl w-full rounded-3xl p-6 md:p-8 border border-indigo-500/50 shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent pointer-events-none"></div>
+
+            <div class="text-6xl mb-3 animate-bounce">🏆</div>
+            <span class="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-widest">
+                JUARA RASIO AGUNG
+            </span>
+
+            <h2 id="winner-name" class="text-3xl md:text-4xl font-black text-white mt-3 mb-1">
+                Kelompok Alpha
+            </h2>
+            <p class="text-xs md:text-sm text-indigo-300 mb-6">Selamat atas kemenangannya dalam pertempuran matematika perbandingan!</p>
+
+            <!-- Stats Grid Breakdown -->
+            <div class="grid grid-cols-2 gap-3 mb-6 text-left">
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">Total Soal Dijawab</div>
+                    <div id="stat-total-questions" class="text-xl font-mono font-bold text-white">0</div>
+                </div>
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">Akurasi Jawaban</div>
+                    <div id="stat-accuracy" class="text-xl font-mono font-bold text-emerald-400">0%</div>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" 
+                class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-red-600 hover:from-blue-500 hover:to-red-500 text-white font-black text-base shadow-xl transition">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Main Lagi
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 5: GAME RULES MODAL ================= -->
+    <div id="rules-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-xl w-full rounded-3xl p-6 md:p-8 border border-slate-700 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-book-open text-indigo-400"></i>
+                    <span>Aturan Game: The Great Ratio Race</span>
+                </h3>
+                <button onclick="toggleRulesModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs md:text-sm text-slate-300 leading-relaxed max-h-80 overflow-y-auto pr-2">
+                <p><b>1. Tujuan Game:</b> Berlomba membawa kendaraan kelompok mencapai <b>Langkah 10 (Finish)</b> paling awal.</p>
+                <p><b>2. Pilihan Kartu:</b></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><b>🔵 Kartu Senilai:</b> Maju 1 langkah jika jawaban benar.</li>
+                    <li><b>🔴 Kartu Berbalik Nilai:</b> Maju 2 langkah jika jawaban benar (soal lebih menantang).</li>
+                </ul>
+                <p><b>3. Waktu Diskusi:</b> Setiap kelompok mendapat waktu 90 detik per soal.</p>
+                <p><b>4. Lempar Soal:</b> Jika kelompok aktif menyerah, soal dapat dilempar ke kelompok lawan untuk setengah poin.</p>
+                <p><b>5. 🎁 Kotak Kejutan (Stasiun 4 & 8):</b></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><b>🚀 Turbo:</b> Maju 1 langkah tanpa menjawab.</li>
+                    <li><b>🌀 Zonking:</b> Mundur 1 langkah.</li>
+                    <li><b>🔄 Switch:</b> Tukar posisi pion jika berada di belakang lawan.</li>
+                </ul>
+            </div>
+
+            <button onclick="toggleRulesModal()" class="w-full mt-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
+                Tutup Petunjuk
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ENGINE ================= -->
+    <script>
+        // Question Dataset - SMP Class 7 Math
+        const QUESTION_BANK = {
+            senilai: [
+                {
+                    id: 's1',
+                    question: 'Sebuah mobil membutuhkan 3 liter bensin untuk menempuh jarak 36 km. Berapa liter bensin yang dibutuhkan untuk menempuh jarak 60 km?',
+                    options: ['4 Liter', '5 Liter', '6 Liter', '7 Liter'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Senilai:</b> $\\frac{a_1}{b_1} = \\frac{a_2}{b_2}$<br>' +
+                                 'Konsumsi bensin per km = $36 \\div 3 = 12$ km/liter.<br>' +
+                                 'Untuk 60 km: $60 \\div 12 = \\mathbf{5\\text{ Liter}}$.'
+                },
+                {
+                    id: 's2',
+                    question: 'Harga 5 buah buku tulis adalah Rp15.000. Berapakah harga yang harus dibayar jika Andi ingin membeli 8 buku tulis?',
+                    options: ['Rp20.000', 'Rp22.500', 'Rp24.000', 'Rp28.000'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Harga 1 buku = $\\text{Rp}15.000 \\div 5 = \\text{Rp}3.000$.<br>' +
+                                 'Harga 8 buku = $8 \\times \\text{Rp}3.000 = \\mathbf{\\text{Rp}24.000}$.'
+                },
+                {
+                    id: 's3',
+                    question: 'Seorang penjahit mampu membuat 6 potong baju dalam waktu 2 hari. Berapa banyak baju yang bisa dibuat penjahit tersebut dalam waktu 5 hari?',
+                    options: ['12 Potong', '15 Potong', '18 Potong', '20 Potong'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Produksi per hari = $6 \\div 2 = 3$ potong baju.<br>' +
+                                 'Dalam 5 hari = $5 \\times 3 = \\mathbf{15\\text{ potong baju}}$.'
+                },
+                {
+                    id: 's4',
+                    question: 'Suatu resep kue membutuhkan 200 gram gula pasir untuk membuat 4 porsi kue. Berapa gram gula pasir yang dibutuhkan untuk membuat 10 porsi kue?',
+                    options: ['400 Gram', '450 Gram', '500 Gram', '600 Gram'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Gula per porsi = $200 \\div 4 = 50$ gram.<br>' +
+                                 'Untuk 10 porsi = $10 \\times 50 = \\mathbf{500\\text{ gram}}$.'
+                },
+                {
+                    id: 's5',
+                    question: 'Pada peta berskala 1 : 200.000, jarak antara Kota X dan Kota Y adalah 4 cm. Berapakah jarak sebenarnya kedua kota tersebut?',
+                    options: ['6 km', '8 km', '10 km', '12 km'],
+                    correct: 1,
+                    explanation: '<b>Skala & Perbandingan Senilai:</b><br>' +
+                                 'Jarak sebenarnya = $4\\text{ cm} \\times 200.000 = 800.000\\text{ cm}$.<br>' +
+                                 'Konversi ke kilometer = $800.000 \\div 100.000 = \\mathbf{8\\text{ km}}$.'
+                },
+                {
+                    id: 's6',
+                    question: 'Seorang pekerja mendapatkan upah Rp300.000 untuk 3 hari kerja. Berapakah upah yang diterima pekerja tersebut jika ia bekerja selama 7 hari?',
+                    options: ['Rp600.000', 'Rp650.000', 'Rp700.000', 'Rp750.000'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Upah per hari = $\\text{Rp}300.000 \\div 3 = \\text{Rp}100.000$.<br>' +
+                                 'Untuk 7 hari = $7 \\times \\text{Rp}100.000 = \\mathbf{\\text{Rp}700.000}$.'
+                },
+                {
+                    id: 's7',
+                    question: 'Harga 2 kg buah apel adalah Rp40.000. Berapakah harga 5 kg buah apel dengan kualitas yang sama?',
+                    options: ['Rp80.000', 'Rp90.000', 'Rp100.000', 'Rp120.000'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Harga 1 kg = $\\text{Rp}40.000 \\div 2 = \\text{Rp}20.000$.<br>' +
+                                 'Harga 5 kg = $5 \\times \\text{Rp}20.000 = \\mathbf{\\text{Rp}100.000}$.'
+                },
+                {
+                    id: 's8',
+                    question: 'Sebuah mesin cetak sanggup mencetak 120 lembar brosur dalam waktu 3 menit. Berapa lembar brosur yang dicetak mesin dalam 10 menit?',
+                    options: ['360 Lembar', '400 Lembar', '450 Lembar', '500 Lembar'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Senilai:</b><br>' +
+                                 'Kecepatan cetak = $120 \\div 3 = 40$ lembar/menit.<br>' +
+                                 'Dalam 10 menit = $10 \\times 40 = \\mathbf{400\\text{ lembar}}$.'
+                }
+            ],
+            berbalik: [
+                {
+                    id: 'b1',
+                    question: 'Sebuah renovasi rumah dapat diselesaikan oleh 6 pekerja dalam waktu 20 hari. Jika pekerja ditambah menjadi 10 orang, berapa hari rumah tersebut selesai?',
+                    options: ['10 Hari', '12 Hari', '14 Hari', '15 Hari'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b> $a_1 \\times b_1 = a_2 \\times b_2$<br>' +
+                                 'Total beban kerja = $6 \\times 20 = 120$ orang-hari.<br>' +
+                                 'Dengan 10 pekerja: $120 \\div 10 = \\mathbf{12\\text{ Hari}}$.'
+                },
+                {
+                    id: 'b2',
+                    question: 'Seorang peternak memiliki persediaan makanan untuk 20 ekor ayam selama 15 hari. Jika ia membeli 5 ekor ayam lagi, berapa hari persediaan makanan akan habis?',
+                    options: ['10 Hari', '12 Hari', '13 Hari', '14 Hari'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total ayam = $20 + 5 = 25$ ekor.<br>' +
+                                 'Total pakan = $20 \\times 15 = 300$.<br>' +
+                                 'Lama habis = $300 \\div 25 = \\mathbf{12\\text{ Hari}}$.'
+                },
+                {
+                    id: 'b3',
+                    question: 'Sebuah mobil menempuh jarak dua kota dengan kecepatan rata-rata 60 km/jam dalam waktu 4 jam. Berapakah kecepatan rata-rata jika ingin ditempuh dalam 3 jam?',
+                    options: ['70 km/jam', '75 km/jam', '80 km/jam', '90 km/jam'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Jarak total = $60 \\times 4 = 240$ km.<br>' +
+                                 'Kecepatan baru = $240 \\div 3 = \\mathbf{80\\text{ km/jam}}$.'
+                },
+                {
+                    id: 'b4',
+                    question: 'Sebuah kolam dapat diisi penuh air dalam waktu 6 jam menggunakan 4 pompa air. Berapa jam waktu yang dibutuhkan jika menggunakan 6 pompa air?',
+                    options: ['3 Jam', '4 Jam', '5 Jam', '4.5 Jam'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total kapasitas = $4 \\times 6 = 24$.<br>' +
+                                 'Waktu dengan 6 pompa = $24 \\div 6 = \\mathbf{4\\text{ Jam}}$.'
+                },
+                {
+                    id: 'b5',
+                    question: 'Persediaan beras di panti asuhan cukup untuk 12 anak selama 10 hari. Jika penghuni panti bertambah menjadi 15 anak, berapa hari persediaan beras akan cukup?',
+                    options: ['6 Hari', '7 Hari', '8 Hari', '9 Hari'],
+                    correct: 2,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total stok = $12 \\times 10 = 120$.<br>' +
+                                 'Untuk 15 anak = $120 \\div 15 = \\mathbf{8\\text{ Hari}}$.'
+                },
+                {
+                    id: 'b6',
+                    question: 'Kecepatan bus 80 km/jam memerlukan waktu 5 jam perjalanan. Jika kecepatan ditingkatkan menjadi 100 km/jam, berapa waktu yang dibutuhkan?',
+                    options: ['3.5 Jam', '4 Jam', '4.5 Jam', '5 Jam'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total Jarak = $80 \\times 5 = 400$ km.<br>' +
+                                 'Waktu baru = $400 \\div 100 = \\mathbf{4\\text{ Jam}}$.'
+                },
+                {
+                    id: 'b7',
+                    question: 'Suatu pekerjaan dapat diselesaikan oleh 8 orang dalam 15 hari. Jika pekerjaan ingin diselesaikan dalam waktu 10 hari, berapa jumlah pekerja yang dibutuhkan?',
+                    options: ['10 Orang', '12 Orang', '14 Orang', '16 Orang'],
+                    correct: 1,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total Beban = $8 \\times 15 = 120$.<br>' +
+                                 'Pekerja dibutuhkan = $120 \\div 10 = \\mathbf{12\\text{ Orang}}$.'
+                },
+                {
+                    id: 'b8',
+                    question: 'Sebungkus permen dibagikan kepada 24 anak, masing-masing mendapat 5 permen. Jika permen dibagikan kepada 20 anak, berapa permen yang didapat setiap anak?',
+                    options: ['6 Permen', '7 Permen', '8 Permen', '10 Permen'],
+                    correct: 0,
+                    explanation: '<b>Perbandingan Berbalik Nilai:</b><br>' +
+                                 'Total Permen = $24 \\times 5 = 120$.<br>' +
+                                 'Tiap anak = $120 \\div 20 = \\mathbf{6\\text{ permen}}$.'
+                }
+            ]
+        };
+
+        const AVATARS = ['🏎️', '🚀', '🏍️', '🐴', '🛸', '⚡'];
+
+        let gameState = {
+            alpha: { name: 'Kelompok Alpha', avatar: '🏎️', pos: 0, questionsAnswered: 0, correct: 0 },
+            beta: { name: 'Kelompok Beta', avatar: '🚀', pos: 0, questionsAnswered: 0, correct: 0 },
+            currentTurn: 'alpha',
+            soundEnabled: true,
+            usedQuestions: new Set(),
+            pendingCategory: null,
+            pendingQuestion: null,
+            timerInterval: null,
+            secondsLeft: 90,
+            timerRunning: false,
+            awaitingMystery: false,
+            isPassedToOpponent: false
+        };
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(240, now);
+                    osc.frequency.setValueAtTime(180, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'move') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(500, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'mystery') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, now);
+                    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.4);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'win') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.15);
+                    osc.frequency.setValueAtTime(783.99, now + 0.3);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.45);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            if (gameState.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-emerald-400';
+                text.innerText = 'Suara: ON';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+                text.innerText = 'Suara: OFF';
+            }
+        }
+
+        window.onload = function() {
+            renderAvatarSelectors();
+            renderTrackGrid();
+        };
+
+        function renderAvatarSelectors() {
+            const alphaBox = document.getElementById('alpha-avatar-selector');
+            const betaBox = document.getElementById('beta-avatar-selector');
+
+            alphaBox.innerHTML = '';
+            betaBox.innerHTML = '';
+
+            AVATARS.forEach((av, idx) => {
+                const btnA = document.createElement('button');
+                btnA.type = 'button';
+                btnA.className = `p-2.5 rounded-xl text-2xl border ${idx === 0 ? 'bg-blue-600/30 border-blue-400' : 'bg-slate-900 border-slate-700 hover:border-slate-500'} transition flex items-center justify-center`;
+                btnA.innerText = av;
+                btnA.onclick = () => {
+                    gameState.alpha.avatar = av;
+                    Array.from(alphaBox.children).forEach(c => c.className = 'p-2.5 rounded-xl text-2xl border bg-slate-900 border-slate-700 hover:border-slate-500 transition flex items-center justify-center');
+                    btnA.className = 'p-2.5 rounded-xl text-2xl border bg-blue-600/30 border-blue-400 transition flex items-center justify-center';
+                };
+                alphaBox.appendChild(btnA);
+
+                const btnB = document.createElement('button');
+                btnB.type = 'button';
+                btnB.className = `p-2.5 rounded-xl text-2xl border ${idx === 1 ? 'bg-red-600/30 border-red-400' : 'bg-slate-900 border-slate-700 hover:border-slate-500'} transition flex items-center justify-center`;
+                btnB.innerText = av;
+                btnB.onclick = () => {
+                    gameState.beta.avatar = av;
+                    Array.from(betaBox.children).forEach(c => c.className = 'p-2.5 rounded-xl text-2xl border bg-slate-900 border-slate-700 hover:border-slate-500 transition flex items-center justify-center');
+                    btnB.className = 'p-2.5 rounded-xl text-2xl border bg-red-600/30 border-red-400 transition flex items-center justify-center';
+                };
+                betaBox.appendChild(btnB);
+            });
+
+            gameState.alpha.avatar = AVATARS[0];
+            gameState.beta.avatar = AVATARS[1];
+        }
+
+        function renderTrackGrid() {
+            const alphaContainer = document.getElementById('alpha-track-cells');
+            const betaContainer = document.getElementById('beta-track-cells');
+
+            alphaContainer.innerHTML = '';
+            betaContainer.innerHTML = '';
+
+            for (let step = 0; step <= 10; step++) {
+                const cellA = document.createElement('div');
+                cellA.className = getCellClasses(step, 'blue', gameState.alpha.pos === step);
+                cellA.innerHTML = getCellInnerHtml(step, gameState.alpha.avatar, gameState.alpha.pos === step);
+                alphaContainer.appendChild(cellA);
+
+                const cellB = document.createElement('div');
+                cellB.className = getCellClasses(step, 'red', gameState.beta.pos === step);
+                cellB.innerHTML = getCellInnerHtml(step, gameState.beta.avatar, gameState.beta.pos === step);
+                betaContainer.appendChild(cellB);
+            }
+        }
+
+        function getCellClasses(step, teamColor, hasPawn) {
+            let base = "h-14 md:h-16 rounded-xl flex flex-col items-center justify-between p-1 transition-all duration-300 relative border font-bold ";
+            
+            if (hasPawn) {
+                if (teamColor === 'blue') base += "bg-blue-600/40 border-blue-400 shadow-lg shadow-blue-500/30 scale-105 z-10 ";
+                else base += "bg-red-600/40 border-red-400 shadow-lg shadow-red-500/30 scale-105 z-10 ";
+            } else {
+                if (step === 0) base += "bg-slate-800/60 border-slate-700 text-slate-400 ";
+                else if (step === 10) base += "bg-amber-500/20 border-amber-500/40 text-amber-300 ";
+                else if (step === 4 || step === 8) base += "bg-amber-900/30 border-amber-500/50 text-amber-400 ";
+                else base += "bg-slate-900/60 border-slate-800/80 text-slate-400 ";
+            }
+            return base;
+        }
+
+        function getCellInnerHtml(step, avatar, hasPawn) {
+            let topBadge = `<span class="text-[9px] md:text-[10px] opacity-70">${step === 0 ? 'START' : step === 10 ? 'FINISH' : 'L' + step}</span>`;
+            let icon = '';
+
+            if (hasPawn) {
+                icon = `<span class="text-xl md:text-2xl animate-bounce">${avatar}</span>`;
+            } else if (step === 4 || step === 8) {
+                icon = `<span class="text-xs md:text-sm animate-pulse">🎁</span>`;
+            } else if (step === 10) {
+                icon = `<span class="text-xs md:text-sm">🏁</span>`;
+            }
+
+            return `${topBadge}${icon}<div></div>`;
+        }
+
+        function handleStartGame(e) {
+            e.preventDefault();
+            const alphaName = document.getElementById('alpha-name-input').value.trim() || 'Kelompok Alpha';
+            const betaName = document.getElementById('beta-name-input').value.trim() || 'Kelompok Beta';
+
+            gameState.alpha.name = alphaName;
+            gameState.beta.name = betaName;
+
+            document.getElementById('alpha-lane-title').children[1].innerText = alphaName;
+            document.getElementById('beta-lane-title').children[1].innerText = betaName;
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            updateTurnUI();
+            resetTimer();
+        }
+
+        function updateTurnUI() {
+            const currentTeam = gameState[gameState.currentTurn];
+            const banner = document.getElementById('turn-banner');
+            const teamNameEl = document.getElementById('current-team-name');
+            const iconBg = document.getElementById('current-team-icon-bg');
+            const iconEl = document.getElementById('current-team-icon');
+
+            teamNameEl.innerText = currentTeam.name;
+            iconEl.innerText = currentTeam.avatar;
+
+            if (gameState.currentTurn === 'alpha') {
+                banner.className = "glass-card rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 border-l-8 border-blue-500 transition-all duration-300";
+                teamNameEl.className = "text-2xl font-black text-blue-400 tracking-tight";
+                iconBg.className = "w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-3xl shadow-inner";
+            } else {
+                banner.className = "glass-card rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 border-l-8 border-red-500 transition-all duration-300";
+                teamNameEl.className = "text-2xl font-black text-red-400 tracking-tight";
+                iconBg.className = "w-14 h-14 rounded-2xl bg-red-600/20 border border-red-500/50 flex items-center justify-center text-3xl shadow-inner";
+            }
+
+            document.getElementById('alpha-step-badge').innerText = `Posisi: Langkah ${gameState.alpha.pos}`;
+            document.getElementById('beta-step-badge').innerText = `Posisi: Langkah ${gameState.beta.pos}`;
+
+            renderTrackGrid();
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerRunning = true;
+            updateTimerDisplay();
+
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.secondsLeft > 0) {
+                    gameState.secondsLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(gameState.timerInterval);
+                    gameState.timerRunning = false;
+                    playSound('wrong');
+                }
+            }, 1000);
+        }
+
+        function toggleTimer() {
+            if (gameState.timerRunning) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerRunning = false;
+                document.getElementById('timer-toggle-icon').className = 'fa-solid fa-play';
+            } else {
+                startTimer();
+                document.getElementById('timer-toggle-icon').className = 'fa-solid fa-pause';
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.secondsLeft = 90;
+            gameState.timerRunning = false;
+            document.getElementById('timer-toggle-icon').className = 'fa-solid fa-play';
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(gameState.secondsLeft / 60);
+            const secs = gameState.secondsLeft % 60;
+            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = formatted;
+            document.getElementById('modal-timer-badge').innerText = `Waktu: ${formatted}`;
+        }
+
+        function selectCardCategory(category) {
+            gameState.pendingCategory = category;
+            gameState.isPassedToOpponent = false;
+
+            const questions = QUESTION_BANK[category];
+            const available = questions.filter(q => !gameState.usedQuestions.has(q.id));
+
+            let selectedQ;
+            if (available.length === 0) {
+                selectedQ = questions[Math.floor(Math.random() * questions.length)];
+            } else {
+                selectedQ = available[Math.floor(Math.random() * available.length)];
+            }
+
+            gameState.usedQuestions.add(selectedQ.id);
+            gameState.pendingQuestion = selectedQ;
+
+            const modalBadge = document.getElementById('modal-category-badge');
+            if (category === 'senilai') {
+                modalBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30';
+                modalBadge.innerText = '🔵 Kartu Senilai (+1 Langkah)';
+            } else {
+                modalBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30';
+                modalBadge.innerText = '🔴 Kartu Berbalik Nilai (+2 Langkah)';
+            }
+
+            document.getElementById('modal-question-text').innerText = selectedQ.question;
+
+            const grid = document.getElementById('modal-options-grid');
+            grid.innerHTML = '';
+
+            selectedQ.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'p-3.5 rounded-2xl bg-slate-900 border border-slate-700 hover:border-indigo-500 hover:bg-slate-800 text-left font-semibold text-xs md:text-sm text-slate-200 transition duration-200 flex items-center space-x-3 group';
+                btn.onclick = () => submitAnswer(idx);
+
+                const letter = String.fromCharCode(65 + idx);
+                btn.innerHTML = `<span class="w-7 h-7 rounded-xl bg-slate-800 group-hover:bg-indigo-600 group-hover:text-white border border-slate-700 flex items-center justify-center font-bold text-xs text-indigo-400 transition">${letter}</span><span>${opt}</span>`;
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('question-modal').classList.remove('hidden');
+            resetTimer();
+            startTimer();
+        }
+
+        function handlePassQuestion() {
+            gameState.isPassedToOpponent = true;
+            const opponentKey = (gameState.currentTurn === 'alpha') ? 'beta' : 'alpha';
+            const opponentName = gameState[opponentKey].name;
+
+            const modalBadge = document.getElementById('modal-category-badge');
+            modalBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            modalBadge.innerText = `🔄 Dilempar ke: ${opponentName} (Bonus 1 Langkah)`;
+
+            resetTimer();
+            startTimer();
+        }
+
+        function submitAnswer(chosenIdx) {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('question-modal').classList.add('hidden');
+
+            let activeTeamKey = gameState.currentTurn;
+            if (gameState.isPassedToOpponent) {
+                activeTeamKey = (gameState.currentTurn === 'alpha') ? 'beta' : 'alpha';
+            }
+
+            const activeTeam = gameState[activeTeamKey];
+            const q = gameState.pendingQuestion;
+            const isCorrect = (chosenIdx === q.correct);
+
+            activeTeam.questionsAnswered++;
+
+            const statusBanner = document.getElementById('explanation-status-banner');
+            const statusIcon = document.getElementById('explanation-status-icon');
+            const statusTitle = document.getElementById('explanation-status-title');
+            const statusSub = document.getElementById('explanation-status-subtitle');
+
+            let stepsToMove = 0;
+
+            if (isCorrect) {
+                activeTeam.correct++;
+                stepsToMove = (gameState.pendingCategory === 'senilai') ? 1 : 2;
+                if (gameState.isPassedToOpponent) stepsToMove = 1;
+
+                playSound('correct');
+                statusBanner.className = "rounded-2xl p-4 mb-5 text-center flex items-center justify-center space-x-3 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                statusIcon.className = "fa-solid fa-circle-check text-emerald-400 text-3xl";
+                statusTitle.innerText = "JAWABAN BENAR! 🎉";
+                statusSub.innerText = `${activeTeam.name} berhasil menjawab tepat dan maju ${stepsToMove} langkah!`;
+            } else {
+                playSound('wrong');
+                statusBanner.className = "rounded-2xl p-4 mb-5 text-center flex items-center justify-center space-x-3 bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                statusIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-3xl";
+                statusTitle.innerText = "JAWABAN KURANG TEPAT ❌";
+                statusSub.innerText = `${activeTeam.name} belum bisa maju pada giliran ini. Jawaban yang benar: ${q.options[q.correct]}`;
+            }
+
+            const prevPos = activeTeam.pos;
+            activeTeam.pos = Math.min(10, activeTeam.pos + stepsToMove);
+
+            if (stepsToMove > 0) {
+                setTimeout(() => playSound('move'), 300);
+            }
+
+            const landedOnMystery = (isCorrect && (activeTeam.pos === 4 || activeTeam.pos === 8) && prevPos !== activeTeam.pos);
+            gameState.awaitingMystery = landedOnMystery;
+
+            document.getElementById('explanation-content').innerHTML = q.explanation;
+            document.getElementById('explanation-modal').classList.remove('hidden');
+
+            renderTrackGrid();
+        }
+
+        function closeExplanationModal() {
+            document.getElementById('explanation-modal').classList.add('hidden');
+
+            const currentTeam = gameState[gameState.currentTurn];
+
+            if (gameState.alpha.pos >= 10) {
+                triggerVictory(gameState.alpha);
+                return;
+            } else if (gameState.beta.pos >= 10) {
+                triggerVictory(gameState.beta);
+                return;
+            }
+
+            if (gameState.awaitingMystery) {
+                gameState.awaitingMystery = false;
+                openMysteryModal();
+                return;
+            }
+
+            gameState.currentTurn = (gameState.currentTurn === 'alpha') ? 'beta' : 'alpha';
+            updateTurnUI();
+            resetTimer();
+        }
+
+        function openMysteryModal() {
+            playSound('mystery');
+            document.getElementById('mystery-box-graphic').classList.remove('hidden');
+            document.getElementById('mystery-result').classList.add('hidden');
+            document.getElementById('mystery-continue-btn').classList.add('hidden');
+            document.getElementById('mystery-modal').classList.remove('hidden');
+        }
+
+        function openMysteryBox() {
+            document.getElementById('mystery-box-graphic').classList.add('hidden');
+
+            const currentTeamKey = gameState.currentTurn;
+            const currentTeam = gameState[currentTeamKey];
+            const opponentTeamKey = (currentTeamKey === 'alpha') ? 'beta' : 'alpha';
+            const opponentTeam = gameState[opponentTeamKey];
+
+            const events = ['turbo', 'zonk', 'switch'];
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+
+            const iconEl = document.getElementById('mystery-icon');
+            const titleEl = document.getElementById('mystery-title');
+            const descEl = document.getElementById('mystery-desc');
+
+            if (randomEvent === 'turbo') {
+                playSound('correct');
+                currentTeam.pos = Math.min(10, currentTeam.pos + 1);
+                iconEl.innerText = '🚀';
+                titleEl.innerText = 'TURBO BOOST!';
+                descEl.innerText = 'Kekompakan tim yang luar biasa! Mendapat bonus MAJU 1 LANGKAH GRATIS!';
+            } else if (randomEvent === 'zonk') {
+                playSound('wrong');
+                currentTeam.pos = Math.max(0, currentTeam.pos - 1);
+                iconEl.innerText = '🌀';
+                titleEl.innerText = 'ZONKING RASIO!';
+                descEl.innerText = 'Kalkulasi rasio terbalik! Harus MUNDUR 1 LANGKAH ke belakang.';
+            } else if (randomEvent === 'switch') {
+                if (currentTeam.pos < opponentTeam.pos) {
+                    playSound('win');
+                    const temp = currentTeam.pos;
+                    currentTeam.pos = opponentTeam.pos;
+                    opponentTeam.pos = temp;
+                    iconEl.innerText = '🔄';
+                    titleEl.innerText = 'POSITION SWITCH!';
+                    descEl.innerText = `Hebat sekali! Berhasil TUKAR POSISI dengan ${opponentTeam.name}!`;
+                } else {
+                    playSound('correct');
+                    currentTeam.pos = Math.min(10, currentTeam.pos + 1);
+                    iconEl.innerText = '⭐';
+                    titleEl.innerText = 'BONUS TIM LEADER!';
+                    descEl.innerText = 'Karena sudah memimpin di depan, mendapat bonus tambahan 1 langkah!';
+                }
+            }
+
+            renderTrackGrid();
+
+            document.getElementById('mystery-result').classList.remove('hidden');
+            document.getElementById('mystery-continue-btn').classList.remove('hidden');
+        }
+
+        function closeMysteryModal() {
+            document.getElementById('mystery-modal').classList.add('hidden');
+
+            const currentTeam = gameState[gameState.currentTurn];
+
+            if (currentTeam.pos >= 10) {
+                triggerVictory(currentTeam);
+                return;
+            }
+
+            gameState.currentTurn = (gameState.currentTurn === 'alpha') ? 'beta' : 'alpha';
+            updateTurnUI();
+            resetTimer();
+        }
+
+        function triggerVictory(winnerTeam) {
+            playSound('win');
+
+            if (window.confetti) {
+                confetti({
+                    particleCount: 150,
+                    spread: 90,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            document.getElementById('winner-name').innerText = `${winnerTeam.avatar} ${winnerTeam.name}`;
+            
+            const totalQuestions = gameState.alpha.questionsAnswered + gameState.beta.questionsAnswered;
+            const totalCorrect = gameState.alpha.correct + gameState.beta.correct;
+            const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+            document.getElementById('stat-total-questions').innerText = totalQuestions;
+            document.getElementById('stat-accuracy').innerText = `${accuracy}%`;
+
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        function toggleRulesModal() {
+            const rulesModal = document.getElementById('rules-modal');
+            rulesModal.classList.toggle('hidden');
+        }
+
+        function confirmResetGame() {
+            if (confirm("Apakah Anda yakin ingin mereset seluruh permainan?")) {
+                restartGame();
+            }
+        }
+
+        function restartGame() {
+            clearInterval(gameState.timerInterval);
+            gameState.alpha.pos = 0;
+            gameState.alpha.questionsAnswered = 0;
+            gameState.alpha.correct = 0;
+
+            gameState.beta.pos = 0;
+            gameState.beta.questionsAnswered = 0;
+            gameState.beta.correct = 0;
+
+            gameState.currentTurn = 'alpha';
+            gameState.usedQuestions.clear();
+
+            document.getElementById('victory-modal').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
